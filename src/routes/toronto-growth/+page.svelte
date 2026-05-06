@@ -99,7 +99,7 @@
 	<title>Toronto ridehailing charts</title>
 </svelte:head>
 
-<Password />
+<!-- <Password /> -->
 
 <main class="page" class:light={theme === 'light'}>
 
@@ -112,7 +112,7 @@
 			{theme === 'dark' ? '☀ Light mode' : '☾ Dark mode'}
 		</button>
 
-		<h2>Charting growth of ridehailing in Toronto</h2>
+		<h2>Charting increase in ridehailing in Toronto</h2>
 		<p>
 			Visualizing increase in daily trips, active drivers, vehicle kilometres travelled, and fares paid for ridehailing services. <br><br>
 			Data source: <a href="https://open.toronto.ca/dataset/private-transportation-companies-summary-and-trip-data/" target="_blank" rel="noopener">City of Toronto Open Data.</a>
