@@ -65,10 +65,12 @@
 	const innerH = H - margin.top - margin.bottom;
 
 	let windowSize = $state(30);
+	let showPct    = $state(false);
 	let hovered    = $state(null);
 	let svgEl      = $state(null);
 
-	const stackGen = d3.stack().keys(KEYS);
+	const stackGen    = d3.stack().keys(KEYS);
+	const stackGenPct = d3.stack().keys(KEYS).offset(d3.stackOffsetExpand);
 
 	function inGap(dt) {
 		return gapRanges.some((r) => dt >= r.start && dt <= r.end);
@@ -106,7 +108,9 @@
 			: []
 	);
 
-	const series = $derived(smoothedRows.length ? stackGen(smoothedRows) : []);
+	const series = $derived(
+		smoothedRows.length ? (showPct ? stackGenPct(smoothedRows) : stackGen(smoothedRows)) : []
+	);
 
 	// Use shared xDomain when provided so all charts align on identical pixel columns.
 	const effectiveDomain = $derived(
@@ -122,7 +126,7 @@
 	const yScale = $derived(
 		series.length
 			? d3.scaleLinear()
-					.domain([0, d3.max(series[series.length - 1].filter((d) => !d.data.isGap), (d) => d[1]) * 1.05])
+					.domain(showPct ? [0, 1] : [0, d3.max(series[series.length - 1].filter((d) => !d.data.isGap), (d) => d[1]) * 1.05])
 					.nice()
 					.range([innerH, 0])
 			: null
@@ -158,6 +162,7 @@
 	const yTicks = $derived(yScale ? yScale.ticks(6) : []);
 
 	const yTickFmt = (v) => {
+		if (showPct) return `${Math.round(v * 100)}%`;
 		if (v >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
 		if (v >= 1e3) return `${(v / 1e3).toFixed(0)}K`;
 		return `${v}`;
@@ -324,13 +329,11 @@
 
 			</g>
 
-			<!-- Daily / 30-day average toggle buttons, positioned in the subtitle zone -->
+			<!-- Daily / 30-day average toggle buttons -->
 			<rect x={margin.left} y={38} width={58} height={20} rx="3"
 				fill={windowSize === 1 ? (theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.10)') : 'transparent'}
 				stroke={theme === 'dark' ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.20)'} stroke-width="1"
-				style="cursor: pointer"
-				role="button"
-				tabindex="0"
+				style="cursor: pointer" role="button" tabindex="0"
 				onclick={() => (windowSize = 1)}
 				onkeydown={(e) => e.key === 'Enter' && (windowSize = 1)} />
 			<text x={margin.left + 29} y={51} text-anchor="middle"
@@ -341,15 +344,36 @@
 			<rect x={margin.left + 62} y={38} width={112} height={20} rx="3"
 				fill={windowSize === 30 ? (theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.10)') : 'transparent'}
 				stroke={theme === 'dark' ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.20)'} stroke-width="1"
-				style="cursor: pointer"
-				role="button"
-				tabindex="0"
+				style="cursor: pointer" role="button" tabindex="0"
 				onclick={() => (windowSize = 30)}
 				onkeydown={(e) => e.key === 'Enter' && (windowSize = 30)} />
 			<text x={margin.left + 118} y={51} text-anchor="middle"
 				font-family="OpenSans, sans-serif" font-size="11"
 				fill={windowSize === 30 ? T.title : T.label}
 				style="pointer-events: none">30-day average</text>
+
+			<!-- Total / Percent toggle buttons -->
+			<rect x={margin.left + 190} y={38} width={52} height={20} rx="3"
+				fill={!showPct ? (theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.10)') : 'transparent'}
+				stroke={theme === 'dark' ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.20)'} stroke-width="1"
+				style="cursor: pointer" role="button" tabindex="0"
+				onclick={() => (showPct = false)}
+				onkeydown={(e) => e.key === 'Enter' && (showPct = false)} />
+			<text x={margin.left + 216} y={51} text-anchor="middle"
+				font-family="OpenSans, sans-serif" font-size="11"
+				fill={!showPct ? T.title : T.label}
+				style="pointer-events: none">Total</text>
+
+			<rect x={margin.left + 246} y={38} width={64} height={20} rx="3"
+				fill={showPct ? (theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.10)') : 'transparent'}
+				stroke={theme === 'dark' ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.20)'} stroke-width="1"
+				style="cursor: pointer" role="button" tabindex="0"
+				onclick={() => (showPct = true)}
+				onkeydown={(e) => e.key === 'Enter' && (showPct = true)} />
+			<text x={margin.left + 278} y={51} text-anchor="middle"
+				font-family="OpenSans, sans-serif" font-size="11"
+				fill={showPct ? T.title : T.label}
+				style="pointer-events: none">Percent</text>
 
 		</svg>
 	{/if}

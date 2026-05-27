@@ -5,6 +5,7 @@
 	import '$assets/global-styles.css';
 	import TimeSeriesChart from '$lib/TimeSeriesChart.svelte';
 	import StackedAreaChart from '$lib/StackedAreaChart.svelte';
+	import HourlyVktChart from '$lib/HourlyVktChart.svelte';
 	import { rollingMean } from '$lib/utils.js';
 	import Password from '$lib/Password.svelte';
 
@@ -15,6 +16,7 @@
 	let distRows     = $state([]);
 	let chart4Rows   = $state([]);
 	let chart4Smooth = $state([]);
+	let hourlyRows   = $state([]);
 	let xDomain      = $state(null);
 	let theme        = $state('dark');
 
@@ -88,6 +90,15 @@
 			ontrip:    d.dist_ontrip
 		}));
 
+		// Hourly VKT chart
+		const hourlyRaw = await fetch(`${base}/hourly_vkt_2025.csv`).then((r) => r.text());
+		hourlyRows = d3.csvParse(hourlyRaw, (row) => ({
+			hr:             row.hr,
+			dist_routed:    +row.dist_routed,
+			dist_en_route:  +row.dist_en_route,
+			dist_available: +row.dist_available,
+		}));
+
 		// Chart 4 — estimated daily revenue
 		const s4 = buildSeries(all, (d) => (d.fare_avg > 0 && d.reported_trips > 0 ? d.fare_avg * d.reported_trips : 0));
 		chart4Rows   = s4.rows;
@@ -150,6 +161,10 @@
 	<div class="chart-gap"></div>
 
 	<StackedAreaChart rows={distRows} {xDomain} gapRanges={GAP_RANGES} {theme} />
+
+	<div class="chart-gap"></div>
+
+	<HourlyVktChart rows={hourlyRows} {theme} />
 
 	<div class="chart-gap"></div>
 
