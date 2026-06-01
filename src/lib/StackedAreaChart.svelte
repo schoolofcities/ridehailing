@@ -5,7 +5,7 @@
 	// rows: {dt, available, enroute, ontrip}[]
 	// xDomain: [Date, Date] — shared domain so all charts align on identical pixel columns
 	// gapRanges: [{start, end}] — date ranges to hide and exclude from smooth
-	let { rows, xDomain = null, gapRanges = [], theme = 'dark' } = $props();
+	let { rows, xDomain = null, gapRanges = [], theme = 'dark', title = 'Total kilometres travelled by ridehailing vehicles per day', yUnit = 'km' } = $props();
 
 	const KEYS   = ['available', 'enroute', 'ontrip'];
 	const COLORS = { available: '#EBA00F', enroute: '#007FA3', ontrip: '#6FC7EA' };
@@ -237,10 +237,10 @@
 		>
 			<rect width={W} height={H} fill={T.bg} rx="6" />
 
-			<text x={margin.left} y={24} font-family="TradeGothicBold, sans-serif" font-size="21" fill={T.title}>Total kilomtres travelled by ridehailing vehicles per day</text>
+			<text x={margin.left} y={24} font-family="TradeGothicBold, sans-serif" font-size="21" fill={T.title}>{title}</text>
 
 			<!-- caption aligned to y-axis -->
-			<text x={margin.left} y={H - 10} font-family="OpenSans, sans-serif" font-size="11" fill={T.caption}>Source: City of Toronto. Chart: Jeff Allen & Mia Wang</text>
+			<text x={margin.left} y={H - 10} font-family="OpenSans, sans-serif" font-size="10" fill={T.caption}>Source: City of Toronto. Chart: Jeff Allen & Mia Wang</text>
 
 			<g transform="translate({margin.left},{margin.top})">
 
@@ -315,12 +315,12 @@
 						{@const pct = tot > 0 ? Math.round(hovered[key] / tot * 100) : 0}
 						<rect  x={bx+12} y={by + 28 + i * 19} width={9} height={9} fill={COLORS[key]} rx="1" opacity="0.85" />
 						<text  x={bx+26} y={by + 36 + i * 19} font-family="OpenSans, sans-serif" font-size="11" fill={T.tooltipRow} dominant-baseline="middle">
-							{numFmt(hovered[key])} km ({pct}%)
+							{numFmt(hovered[key])} {yUnit} ({pct}%)
 						</text>
 					{/each}
 					<!-- divider -->
 					<line x1={bx+12} x2={bx+218} y1={by+87} y2={by+87} stroke={T.tooltipDiv} stroke-width="1" />
-					<text x={bx+12} y={by+101} font-family="OpenSansBold, sans-serif" font-size="11" fill={T.tooltipTot}>Total: {numFmt(tot)} km</text>
+					<text x={bx+12} y={by+101} font-family="OpenSansBold, sans-serif" font-size="11" fill={T.tooltipTot}>Total: {numFmt(tot)} {yUnit}</text>
 				{/if}
 
 				<!-- invisible interaction overlay -->
@@ -381,9 +381,7 @@
 
 <style>
 	.chart-wrap {
-		max-width: 1060px;
-		margin: 0 auto;
-		padding: 0 20px;
+		width: 100%;
 		position: relative;
 	}
 	.loading {

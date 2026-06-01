@@ -221,7 +221,7 @@
 			<text x={margin.left} y={52} font-family="OpenSans, sans-serif" font-size="12" fill={T.subtitle}>{subtitle}</text>
 
 			<!-- caption aligned to y-axis -->
-			<text x={margin.left} y={H - 10} font-family="OpenSans, sans-serif" font-size="11" fill={T.caption}>Source: City of Toronto. Chart: Jeff Allen & Mia Wang</text>
+			<text x={margin.left} y={H - 10} font-family="OpenSans, sans-serif" font-size="10" fill={T.caption}>Source: City of Toronto. Chart: Jeff Allen & Mia Wang</text>
 
 			<g transform="translate({margin.left},{margin.top})">
 

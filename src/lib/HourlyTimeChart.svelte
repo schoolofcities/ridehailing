@@ -1,12 +1,12 @@
 <script>
 	import * as d3 from 'd3';
 
-	// rows: {hr: string, dist_routed, dist_en_route, dist_available}[]
+	// rows: {hr: string, time_ontrip, time_enroute, time_available}[]  (minutes)
 	let { rows, theme = 'dark' } = $props();
 
-	const KEYS   = ['dist_available', 'dist_en_route', 'dist_routed'];
-	const COLORS = { dist_available: '#EBA00F', dist_en_route: '#007FA3', dist_routed: '#6FC7EA' };
-	const LABELS = { dist_available: 'Available (searching)', dist_en_route: 'En route (to pickup)', dist_routed: 'On trip' };
+	const KEYS   = ['time_available', 'time_enroute', 'time_ontrip'];
+	const COLORS = { time_available: '#EBA00F', time_enroute: '#007FA3', time_ontrip: '#6FC7EA' };
+	const LABELS = { time_available: 'Available (searching)', time_enroute: 'En route (to pickup)', time_ontrip: 'On trip' };
 
 	const THEMES = {
 		dark: {
@@ -57,9 +57,9 @@
 	const stackRows = $derived(
 		rows.map((d) => ({
 			hr:             d.hr,
-			dist_available: d.dist_available,
-			dist_en_route:  d.dist_en_route,
-			dist_routed:    d.dist_routed,
+			time_available: d.time_available,
+			time_enroute:   d.time_enroute,
+			time_ontrip:    d.time_ontrip,
 		}))
 	);
 
@@ -89,12 +89,18 @@
 
 	const yTickFmt = (v) => {
 		if (showPct) return `${Math.round(v * 100)}%`;
+		if (v >= 1e9) return `${(v / 1e9).toFixed(1)}B`;
 		if (v >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
 		if (v >= 1e3) return `${(v / 1e3).toFixed(0)}K`;
 		return `${v}`;
 	};
 
-	const numFmt = (v) => Math.round(v).toLocaleString('en-CA');
+	// Format minutes for tooltip
+	const timeFmt = (mins) => {
+		if (mins >= 1e6) return `${(mins / 1e6).toFixed(2)}M min`;
+		if (mins >= 1e3) return `${(mins / 1e3).toFixed(0)}K min`;
+		return `${Math.round(mins)} min`;
+	};
 
 	function onMouseMove(e) {
 		if (!xScale || !stackRows.length || !svgEl) return;
@@ -106,7 +112,6 @@
 		hovered = { ...d, x: xScale(d.hr) + xScale.bandwidth() / 2 };
 	}
 
-	// Button style helpers — mirrors StackedAreaChart toggle buttons
 	function btnFill(active) {
 		return active
 			? (theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.10)')
@@ -130,12 +135,12 @@
 		>
 			<rect width={W} height={H} fill={T.bg} rx="6" />
 
-			<text x={margin.left} y={24} font-family="TradeGothicBold, sans-serif" font-size="21" fill={T.title}>Total kilometres travelled by hour of day (2025)</text>
-			<text x={margin.left} y={44} font-family="OpenSans, sans-serif" font-size="12" fill={T.label}>Total kilometres by vehicle phase for each hour of the day, summed across all of 2025.</text>
+			<text x={margin.left} y={24} font-family="TradeGothicBold, sans-serif" font-size="21" fill={T.title}>Total time on app by hour of day (2025)</text>
+			<text x={margin.left} y={44} font-family="OpenSans, sans-serif" font-size="12" fill={T.label}>Total driver-minutes by vehicle phase for each hour of the day, summed across all of 2025.</text>
 
 			<text x={margin.left} y={H - 10} font-family="OpenSans, sans-serif" font-size="10" fill={T.caption}>Source: City of Toronto. Chart: Jeff Allen & Mia Wang</text>
 
-			<!-- Total / Percent toggle buttons -->
+			<!-- Total / Percent toggle -->
 			<rect x={margin.left} y={60} width={52} height={20} rx="3"
 				fill={btnFill(!showPct)} stroke={btnStroke()} stroke-width="1"
 				style="cursor: pointer" role="button" tabindex="0"
@@ -177,7 +182,7 @@
 					{/each}
 				{/each}
 
-				<!-- legend — right of plot area -->
+				<!-- legend -->
 				<g transform="translate({innerW + 12}, 0)">
 					{#each KEYS as key, i}
 						<rect x={0} y={i * 19} width={11} height={11} fill={COLORS[key]} rx="2" opacity="0.85" />
@@ -185,7 +190,7 @@
 					{/each}
 				</g>
 
-				<!-- x axis — tick and label at each bar's left edge (= the boundary between bars) -->
+				<!-- x axis -->
 				<line x1={0} x2={innerW} y1={innerH} y2={innerH} stroke={T.axis} />
 				{#each stackRows as d}
 					{@const hr = parseInt(d.hr)}
@@ -193,7 +198,6 @@
 					<line x1={x} x2={x} y1={innerH} y2={innerH + 5} stroke={T.axis} />
 					<text x={x} y={innerH + 18} text-anchor="middle" font-family="OpenSans, sans-serif" font-size="11" fill={T.label}>{hr}</text>
 				{/each}
-				<!-- trailing tick + label at right edge of last bar -->
 				<line
 					x1={xScale(stackRows[stackRows.length - 1].hr) + xScale.bandwidth()}
 					x2={xScale(stackRows[stackRows.length - 1].hr) + xScale.bandwidth()}
@@ -216,18 +220,18 @@
 				{#if hovered}
 					{@const bx  = hovered.x > innerW * 0.6 ? hovered.x - 250 : hovered.x + 14}
 					{@const by  = 0}
-					{@const tot = hovered.dist_available + hovered.dist_en_route + hovered.dist_routed}
+					{@const tot = hovered.time_available + hovered.time_enroute + hovered.time_ontrip}
 					<rect x={bx} y={by} width={230} height={110} rx="4" fill={T.tooltipBg} stroke={T.tooltipBd} stroke-width="1" />
 					<text x={bx+12} y={by+19} font-family="OpenSans, sans-serif" font-size="11" fill={T.tooltipDt}>Hour {hovered.hr}</text>
 					{#each KEYS as key, i}
 						{@const pct = tot > 0 ? Math.round(hovered[key] / tot * 100) : 0}
 						<rect  x={bx+12} y={by + 28 + i * 19} width={9} height={9} fill={COLORS[key]} rx="1" opacity="0.85" />
 						<text  x={bx+26} y={by + 36 + i * 19} font-family="OpenSans, sans-serif" font-size="11" fill={T.tooltipRow} dominant-baseline="middle">
-							{numFmt(hovered[key])} km ({pct}%)
+							{timeFmt(hovered[key])} ({pct}%)
 						</text>
 					{/each}
 					<line x1={bx+12} x2={bx+218} y1={by+87} y2={by+87} stroke={T.tooltipDiv} stroke-width="1" />
-					<text x={bx+12} y={by+101} font-family="OpenSansBold, sans-serif" font-size="11" fill={T.tooltipTot}>Total: {numFmt(tot)} km</text>
+					<text x={bx+12} y={by+101} font-family="OpenSansBold, sans-serif" font-size="11" fill={T.tooltipTot}>Total: {timeFmt(tot)}</text>
 				{/if}
 
 				<!-- invisible interaction overlay -->

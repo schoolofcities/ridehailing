@@ -6,6 +6,7 @@
 	import TimeSeriesChart from '$lib/TimeSeriesChart.svelte';
 	import StackedAreaChart from '$lib/StackedAreaChart.svelte';
 	import HourlyVktChart from '$lib/HourlyVktChart.svelte';
+	import HourlyTimeChart from '$lib/HourlyTimeChart.svelte';
 	import { rollingMean } from '$lib/utils.js';
 	import Password from '$lib/Password.svelte';
 
@@ -14,9 +15,11 @@
 	let chart2Rows   = $state([]);
 	let chart2Smooth = $state([]);
 	let distRows     = $state([]);
+	let timeRows     = $state([]);
 	let chart4Rows   = $state([]);
 	let chart4Smooth = $state([]);
-	let hourlyRows   = $state([]);
+	let hourlyRows     = $state([]);
+	let hourlyTimeRows = $state([]);
 	let xDomain      = $state(null);
 	let theme        = $state('dark');
 
@@ -59,6 +62,9 @@
 				dist_available:  +row.dist_available_routed  || 0,
 				dist_enroute:    +row.dist_enroute_routed    || 0,
 				dist_ontrip:     +row.dist_ontrip_routed     || 0,
+				time_available:  +row.time_available         || 0,
+				time_enroute:    +row.time_enroute           || 0,
+				time_ontrip:     +row.time_ontrip            || 0,
 				fare_avg:        +row.fare_avg               || 0,
 				reported_trips:  +row.reported_trips_started || 0
 			}))
@@ -90,6 +96,14 @@
 			ontrip:    d.dist_ontrip
 		}));
 
+		// Chart 3b — stacked time by phase
+		timeRows = all.map((d) => ({
+			dt:        d.dt,
+			available: d.time_available,
+			enroute:   d.time_enroute,
+			ontrip:    d.time_ontrip
+		}));
+
 		// Hourly VKT chart
 		const hourlyRaw = await fetch(`${base}/hourly_vkt_2025.csv`).then((r) => r.text());
 		hourlyRows = d3.csvParse(hourlyRaw, (row) => ({
@@ -97,6 +111,14 @@
 			dist_routed:    +row.dist_routed,
 			dist_en_route:  +row.dist_en_route,
 			dist_available: +row.dist_available,
+		}));
+
+		const hourlyTimeRaw = await fetch(`${base}/hourly_time_2025.csv`).then((r) => r.text());
+		hourlyTimeRows = d3.csvParse(hourlyTimeRaw, (row) => ({
+			hr:             row.hr,
+			time_ontrip:    +row.time_ontrip,
+			time_enroute:   +row.time_enroute,
+			time_available: +row.time_available,
 		}));
 
 		// Chart 4 — estimated daily revenue
@@ -160,11 +182,19 @@
 
 	<div class="chart-gap"></div>
 
-	<StackedAreaChart rows={distRows} {xDomain} gapRanges={GAP_RANGES} {theme} />
-
-	<div class="chart-gap"></div>
-
-	<HourlyVktChart rows={hourlyRows} {theme} />
+	<div class="chart-grid">
+		<StackedAreaChart rows={distRows} {xDomain} gapRanges={GAP_RANGES} {theme} />
+		<StackedAreaChart
+			rows={timeRows}
+			{xDomain}
+			gapRanges={GAP_RANGES}
+			{theme}
+			title="Total time on app by ridehailing vehicles per day"
+			yUnit="min"
+		/>
+		<HourlyVktChart rows={hourlyRows} {theme} />
+		<HourlyTimeChart rows={hourlyTimeRows} {theme} />
+	</div>
 
 	<div class="chart-gap"></div>
 
@@ -249,6 +279,21 @@
 
 	.chart-gap {
 		height: 78px;
+	}
+
+	.chart-grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 7px;
+		padding: 0 7px;
+		max-width: 2160px;
+		margin: 0 auto;
+	}
+
+	@media (min-width: 1100px) {
+		.chart-grid {
+			grid-template-columns: 1fr 1fr;
+		}
 	}
 
 	.theme-toggle {
