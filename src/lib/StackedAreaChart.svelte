@@ -7,9 +7,13 @@
 	// gapRanges: [{start, end}] — date ranges to hide and exclude from smooth
 	let { rows, xDomain = null, gapRanges = [], theme = 'dark', title = 'Total kilometres travelled by ridehailing vehicles per day', yUnit = 'km' } = $props();
 
-	const KEYS   = ['available', 'enroute', 'ontrip'];
-	const COLORS = { available: '#EBA00F', enroute: '#007FA3', ontrip: '#6FC7EA' };
-	const LABELS = { available: 'Available (searching)', enroute: 'En route (to pickup)', ontrip: 'On trip' };
+	// KEYS order = bottom to top of stack
+	const ALL_KEYS    = ['available', 'enroute', 'waiting', 'ontrip'];
+	const COLORS = { available: '#EBA00F', waiting: '#C05F2C', enroute: '#007FA3', ontrip: '#6FC7EA' };
+	const LABELS = { available: 'Available (searching)', waiting: 'Waiting at pickup', enroute: 'En route (to pickup)', ontrip: 'On trip' };
+
+	// Use 3-key stack for distance charts, 4-key for time charts (waiting only meaningful for time)
+	const KEYS = $derived(rows.length && 'waiting' in rows[0] ? ALL_KEYS : ALL_KEYS.filter(k => k !== 'waiting'));
 
 	const THEMES = {
 		dark: {
@@ -28,7 +32,7 @@
 			tooltipTot:'#eee',
 			tooltipDiv:'rgba(255,255,255,0.1)',
 			gapFill:   '#181818',
-			edgeStroke:'white'
+			edgeStroke:'white', legendStroke:'black'
 		},
 		light: {
 			bg:        '#f7f7f7',
@@ -46,7 +50,7 @@
 			tooltipTot:'#111',
 			tooltipDiv:'rgba(0,0,0,0.12)',
 			gapFill:   '#f7f7f7',
-			edgeStroke:'rgba(255,255,255,0.6)'
+			edgeStroke:'rgba(255,255,255,0.6)', legendStroke:'rgba(0,0,0,0.5)'
 		}
 	};
 
@@ -58,7 +62,7 @@
 	const AXIS      = $derived(T.axis);
 	const LABEL     = $derived(T.label);
 
-	const margin = { top: 76, right: 112, bottom: 68, left: 80 };
+	const margin = { top: 76, right: 180, bottom: 68, left: 80 };
 	const W      = 1000;
 	const H      = 488;
 	const innerW = W - margin.left - margin.right;
@@ -69,8 +73,8 @@
 	let hovered    = $state(null);
 	let svgEl      = $state(null);
 
-	const stackGen    = d3.stack().keys(KEYS);
-	const stackGenPct = d3.stack().keys(KEYS).offset(d3.stackOffsetExpand);
+	const stackGen    = $derived(d3.stack().keys(KEYS));
+	const stackGenPct = $derived(d3.stack().keys(KEYS).offset(d3.stackOffsetExpand));
 
 	function inGap(dt) {
 		return gapRanges.some((r) => dt >= r.start && dt <= r.end);
@@ -79,6 +83,8 @@
 	function isGapRow(d) {
 		return (d.available === 0 && d.enroute === 0 && d.ontrip === 0) || inGap(d.dt);
 	}
+
+	const hasWaiting = $derived(rows.length > 0 && 'waiting' in rows[0]);
 
 	const smoothedRows = $derived(
 		rows.length
@@ -97,10 +103,12 @@
 					};
 
 					const av = sm('available'), en = sm('enroute'), on = sm('ontrip');
+					const wa = hasWaiting ? sm('waiting') : null;
 					return rows.map((d, i) => ({
 						dt:        d.dt,
 						isGap:     isGap[i],
 						available: isGap[i] ? 0 : Math.max(0, av[i] || 0),
+						waiting:   hasWaiting ? (isGap[i] ? 0 : Math.max(0, wa[i] || 0)) : undefined,
 						enroute:   isGap[i] ? 0 : Math.max(0, en[i] || 0),
 						ontrip:    isGap[i] ? 0 : Math.max(0, on[i] || 0)
 					}));
@@ -220,7 +228,7 @@
 		const d1   = smoothedRows[Math.min(smoothedRows.length - 1, i)];
 		const d    = (!d1 || Math.abs(date - d0.dt) <= Math.abs(date - d1.dt)) ? d0 : d1;
 		if (d.isGap) { hovered = null; return; }
-		hovered    = { dt: d.dt, available: d.available, enroute: d.enroute, ontrip: d.ontrip, x: xScale(d.dt) };
+		hovered    = { dt: d.dt, available: d.available, waiting: d.waiting, enroute: d.enroute, ontrip: d.ontrip, x: xScale(d.dt) };
 	}
 </script>
 
@@ -275,10 +283,10 @@
 					<line x1={hovered.x} x2={hovered.x} y1={0} y2={innerH} stroke={GRID_HOV} stroke-width="1" />
 				{/if}
 
-				<!-- legend — translate y=34 aligns swatches with tooltip swatches at by=7 -->
-				<g transform="translate(10, 34)">
+				<!-- legend — right of plot area -->
+				<g transform="translate({innerW + 12}, 0)">
 					{#each KEYS as key, i}
-						<rect x={0} y={i * 19} width={11} height={11} fill={COLORS[key]} rx="2" opacity="0.85" />
+						<rect x={0.5} y={i * 19 + 0.5} width={10} height={10} fill={COLORS[key]} rx="2" opacity="0.85" stroke={T.legendStroke} stroke-width="1" />
 						<text x={17} y={i * 19 + 9} font-family="OpenSans, sans-serif" font-size="11" fill={LABEL} dominant-baseline="middle">{LABELS[key]}</text>
 					{/each}
 				</g>
@@ -304,12 +312,12 @@
 					</g>
 				{/each}
 
-				<!-- tooltip: positioned at mid-2021; by=7 aligns swatches with legend (translate y=34) -->
+				<!-- tooltip: fixed x at mid-2021, floats near hover -->
 				{#if hovered}
 					{@const bx  = xScale(new Date(2021, 6, 1)) - 48}
 					{@const by  = 7}
-					{@const tot = hovered.available + hovered.enroute + hovered.ontrip}
-					<rect x={bx} y={by} width={230} height={110} rx="4" fill={T.tooltipBg} stroke={T.tooltipBd} stroke-width="1" />
+					{@const tot = hovered.available + (hovered.waiting ?? 0) + hovered.enroute + hovered.ontrip}
+					<rect x={bx} y={by} width={230} height={hasWaiting ? 129 : 110} rx="4" fill={T.tooltipBg} stroke={T.tooltipBd} stroke-width="1" />
 					<text x={bx+12} y={by+19} font-family="OpenSans, sans-serif" font-size="11" fill={T.tooltipDt}>{dateFmt(hovered.dt)}</text>
 					{#each KEYS as key, i}
 						{@const pct = tot > 0 ? Math.round(hovered[key] / tot * 100) : 0}
@@ -319,8 +327,9 @@
 						</text>
 					{/each}
 					<!-- divider -->
-					<line x1={bx+12} x2={bx+218} y1={by+87} y2={by+87} stroke={T.tooltipDiv} stroke-width="1" />
-					<text x={bx+12} y={by+101} font-family="OpenSansBold, sans-serif" font-size="11" fill={T.tooltipTot}>Total: {numFmt(tot)} {yUnit}</text>
+					{@const divY = hasWaiting ? by+106 : by+87}
+					<line x1={bx+12} x2={bx+218} y1={divY} y2={divY} stroke={T.tooltipDiv} stroke-width="1" />
+					<text x={bx+12} y={divY+14} font-family="OpenSansBold, sans-serif" font-size="11" fill={T.tooltipTot}>Total: {numFmt(tot)} {yUnit}</text>
 				{/if}
 
 				<!-- invisible interaction overlay -->

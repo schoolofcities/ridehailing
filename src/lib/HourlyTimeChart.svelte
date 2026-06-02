@@ -4,9 +4,9 @@
 	// rows: {hr: string, time_ontrip, time_enroute, time_available}[]  (minutes)
 	let { rows, theme = 'dark' } = $props();
 
-	const KEYS   = ['time_available', 'time_enroute', 'time_ontrip'];
-	const COLORS = { time_available: '#EBA00F', time_enroute: '#007FA3', time_ontrip: '#6FC7EA' };
-	const LABELS = { time_available: 'Available (searching)', time_enroute: 'En route (to pickup)', time_ontrip: 'On trip' };
+	const KEYS   = ['time_available', 'time_enroute', 'time_waiting', 'time_ontrip'];
+	const COLORS = { time_available: '#EBA00F', time_waiting: '#C05F2C', time_enroute: '#007FA3', time_ontrip: '#6FC7EA' };
+	const LABELS = { time_available: 'Available (searching)', time_waiting: 'Waiting at pickup', time_enroute: 'En route (to pickup)', time_ontrip: 'On trip' };
 
 	const THEMES = {
 		dark: {
@@ -22,6 +22,7 @@
 			tooltipRow:'#ccc',
 			tooltipTot:'#eee',
 			tooltipDiv:'rgba(255,255,255,0.1)',
+			edgeStroke:'white', legendStroke:'black',
 		},
 		light: {
 			bg:        '#f7f7f7',
@@ -36,6 +37,7 @@
 			tooltipRow:'#333',
 			tooltipTot:'#111',
 			tooltipDiv:'rgba(0,0,0,0.12)',
+			edgeStroke:'rgba(255,255,255,0.6)', legendStroke:'rgba(0,0,0,0.5)',
 		}
 	};
 
@@ -58,6 +60,7 @@
 		rows.map((d) => ({
 			hr:             d.hr,
 			time_available: d.time_available,
+			time_waiting:   d.time_waiting,
 			time_enroute:   d.time_enroute,
 			time_ontrip:    d.time_ontrip,
 		}))
@@ -185,7 +188,7 @@
 				<!-- legend -->
 				<g transform="translate({innerW + 12}, 0)">
 					{#each KEYS as key, i}
-						<rect x={0} y={i * 19} width={11} height={11} fill={COLORS[key]} rx="2" opacity="0.85" />
+						<rect x={0.5} y={i * 19 + 0.5} width={10} height={10} fill={COLORS[key]} rx="2" opacity="0.85" stroke={T.legendStroke} stroke-width="1" />
 						<text x={17} y={i * 19 + 9} font-family="OpenSans, sans-serif" font-size="11" fill={T.label} dominant-baseline="middle">{LABELS[key]}</text>
 					{/each}
 				</g>
@@ -220,8 +223,8 @@
 				{#if hovered}
 					{@const bx  = hovered.x > innerW * 0.6 ? hovered.x - 250 : hovered.x + 14}
 					{@const by  = 0}
-					{@const tot = hovered.time_available + hovered.time_enroute + hovered.time_ontrip}
-					<rect x={bx} y={by} width={230} height={110} rx="4" fill={T.tooltipBg} stroke={T.tooltipBd} stroke-width="1" />
+					{@const tot = hovered.time_available + hovered.time_waiting + hovered.time_enroute + hovered.time_ontrip}
+					<rect x={bx} y={by} width={230} height={129} rx="4" fill={T.tooltipBg} stroke={T.tooltipBd} stroke-width="1" />
 					<text x={bx+12} y={by+19} font-family="OpenSans, sans-serif" font-size="11" fill={T.tooltipDt}>Hour {hovered.hr}</text>
 					{#each KEYS as key, i}
 						{@const pct = tot > 0 ? Math.round(hovered[key] / tot * 100) : 0}
@@ -230,8 +233,8 @@
 							{timeFmt(hovered[key])} ({pct}%)
 						</text>
 					{/each}
-					<line x1={bx+12} x2={bx+218} y1={by+87} y2={by+87} stroke={T.tooltipDiv} stroke-width="1" />
-					<text x={bx+12} y={by+101} font-family="OpenSansBold, sans-serif" font-size="11" fill={T.tooltipTot}>Total: {timeFmt(tot)}</text>
+					<line x1={bx+12} x2={bx+218} y1={by+106} y2={by+106} stroke={T.tooltipDiv} stroke-width="1" />
+					<text x={bx+12} y={by+120} font-family="OpenSansBold, sans-serif" font-size="11" fill={T.tooltipTot}>Total: {timeFmt(tot)}</text>
 				{/if}
 
 				<!-- invisible interaction overlay -->

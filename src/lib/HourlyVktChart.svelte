@@ -22,6 +22,7 @@
 			tooltipRow:'#ccc',
 			tooltipTot:'#eee',
 			tooltipDiv:'rgba(255,255,255,0.1)',
+			edgeStroke:'white', legendStroke:'black',
 		},
 		light: {
 			bg:        '#f7f7f7',
@@ -36,6 +37,7 @@
 			tooltipRow:'#333',
 			tooltipTot:'#111',
 			tooltipDiv:'rgba(0,0,0,0.12)',
+			edgeStroke:'rgba(255,255,255,0.6)', legendStroke:'rgba(0,0,0,0.5)',
 		}
 	};
 
@@ -180,7 +182,7 @@
 				<!-- legend — right of plot area -->
 				<g transform="translate({innerW + 12}, 0)">
 					{#each KEYS as key, i}
-						<rect x={0} y={i * 19} width={11} height={11} fill={COLORS[key]} rx="2" opacity="0.85" />
+						<rect x={0.5} y={i * 19 + 0.5} width={10} height={10} fill={COLORS[key]} rx="2" opacity="0.85" stroke={T.legendStroke} stroke-width="1" />
 						<text x={17} y={i * 19 + 9} font-family="OpenSans, sans-serif" font-size="11" fill={T.label} dominant-baseline="middle">{LABELS[key]}</text>
 					{/each}
 				</g>

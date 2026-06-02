@@ -63,6 +63,7 @@
 				dist_enroute:    +row.dist_enroute_routed    || 0,
 				dist_ontrip:     +row.dist_ontrip_routed     || 0,
 				time_available:  +row.time_available         || 0,
+				time_waiting:    +row.time_waiting           || 0,
 				time_enroute:    +row.time_enroute           || 0,
 				time_ontrip:     +row.time_ontrip            || 0,
 				fare_avg:        +row.fare_avg               || 0,
@@ -100,6 +101,7 @@
 		timeRows = all.map((d) => ({
 			dt:        d.dt,
 			available: d.time_available,
+			waiting:   d.time_waiting,
 			enroute:   d.time_enroute,
 			ontrip:    d.time_ontrip
 		}));
@@ -118,6 +120,7 @@
 			hr:             row.hr,
 			time_ontrip:    +row.time_ontrip,
 			time_enroute:   +row.time_enroute,
+			time_waiting:   +row.time_waiting,
 			time_available: +row.time_available,
 		}));
 
