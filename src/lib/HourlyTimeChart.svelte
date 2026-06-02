@@ -187,7 +187,7 @@
 
 				<!-- legend -->
 				<g transform="translate({innerW + 12}, 0)">
-					{#each KEYS as key, i}
+					{#each [...KEYS].reverse() as key, i}
 						<rect x={0.5} y={i * 19 + 0.5} width={10} height={10} fill={COLORS[key]} rx="2" opacity="0.85" stroke={T.legendStroke} stroke-width="1" />
 						<text x={17} y={i * 19 + 9} font-family="OpenSans, sans-serif" font-size="11" fill={T.label} dominant-baseline="middle">{LABELS[key]}</text>
 					{/each}
@@ -226,7 +226,7 @@
 					{@const tot = hovered.time_available + hovered.time_waiting + hovered.time_enroute + hovered.time_ontrip}
 					<rect x={bx} y={by} width={230} height={129} rx="4" fill={T.tooltipBg} stroke={T.tooltipBd} stroke-width="1" />
 					<text x={bx+12} y={by+19} font-family="OpenSans, sans-serif" font-size="11" fill={T.tooltipDt}>Hour {hovered.hr}</text>
-					{#each KEYS as key, i}
+					{#each [...KEYS].reverse() as key, i}
 						{@const pct = tot > 0 ? Math.round(hovered[key] / tot * 100) : 0}
 						<rect  x={bx+12} y={by + 28 + i * 19} width={9} height={9} fill={COLORS[key]} rx="1" opacity="0.85" />
 						<text  x={bx+26} y={by + 36 + i * 19} font-family="OpenSans, sans-serif" font-size="11" fill={T.tooltipRow} dominant-baseline="middle">
