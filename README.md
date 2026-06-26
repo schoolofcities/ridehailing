@@ -2,6 +2,8 @@
 
 Interactive data visualizations to support a short research paper on ridehailing trends in Toronto. 
 
+https://schoolofcities.github.io/ridehailing/toronto-trends
+
 ## Analysis
 
 Preprocessing and exploratory data analysis scripts and notebooks are in `/analysis`. The data are from Open Data Toronto
