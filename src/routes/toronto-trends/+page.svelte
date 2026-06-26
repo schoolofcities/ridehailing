@@ -148,7 +148,7 @@
 			{theme === 'dark' ? '☀ Light mode' : '☾ Dark mode'}
 		</button>
 
-		<h2>Charting increase in ridehailing in Toronto</h2>
+		<h2>Charting trends of ridehailing in Toronto</h2>
 		<p>
 			Visualizing increase in daily trips, active drivers, vehicle kilometres travelled, and fares paid for ridehailing services. <br><br>
 			Data source: <a href="https://open.toronto.ca/dataset/private-transportation-companies-summary-and-trip-data/" target="_blank" rel="noopener">City of Toronto Open Data.</a>
@@ -160,7 +160,7 @@
 	<TimeSeriesChart
 		rows={chart2Rows}
 		smooth={chart2Smooth}
-		title="Increase in daily ridehailing trips"
+		title="Trends of ridehailing trips per day"
 		subtitle="Reported ridehailing trips started per day."
 		darkColour="#F1C500"
 		lightColour="#AB1368"
@@ -174,7 +174,7 @@
 	<TimeSeriesChart
 		rows={chart1Rows}
 		smooth={chart1Smooth}
-		title="Increase in daily active ridehailing vehicles"
+		title="Trends of daily active ridehailing vehicles"
 		subtitle="Daily count of active ridehailing vehicles licensed in Toronto."
 		darkColour="#8DBF2E"
 		lightColour="#0D534D"
