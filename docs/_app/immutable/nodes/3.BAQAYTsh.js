@@ -1,0 +1,1 @@
+import{R as t}from"../chunks/-UyI9lYi.js";import{b as o}from"../chunks/BWOqQBMA.js";function n(e,r){throw new t(e,r.toString())}const i=!0;function a(){n(301,`${o}/toronto-trends`)}const d=Object.freeze(Object.defineProperty({__proto__:null,load:a,prerender:i},Symbol.toStringTag,{value:"Module"}));export{d as universal};
